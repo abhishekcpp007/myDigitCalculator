@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Real-Time Face Recognition</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<style>
+		body {
+			background-color: #f2f2f2;
+			font-family: Arial, sans-serif;
+			font-size: 16px;
+		}
+
+		h1 {
+			text-align: center;
+			margin-top: 50px;
+		}
+
+		.container {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			margin-top: 50px;
+		}
+
+		video {
+			width: 640px;
+			height: 480px;
+			margin-bottom: 20px;
+			box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+		}
+
+		#message {
+			font-size: 24px;
+			font-weight: bold;
+			color: #333333;
+			margin-bottom: 20px;
+		}
+	</style>
+</head>
+<body>
+	<h1>Real-Time Face Recognition</h1>
+
+	<div class="container">
+		<video id="video" autoplay></video>
+		<div id="message"></div>
+	</div>
+
+	<script>
+		// Get the video element and check if the browser supports media devices
+		const video = document.getElementById('video');
+		if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+			// Start the video stream
+			navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+				video.srcObject = stream;
+				video.play();
+			}).catch(function(error) {
+				console.error('Unable to access the camera.', error);
+			});
+		}
+
+		// Set up the WebSocket connection
+		const socket = new WebSocket('ws://localhost:8080');
+		socket.addEventListener('open', function(event) {
+			console.log('WebSocket connected.');
+		});
+
+		// Listen for face recognition events from the server
+		socket.addEventListener('message', function(event) {
+			const message = JSON.parse(event.data);
+			if (message.type === 'face_recognition') {
+				if (message.label) {
+					document.getElementById('message').textContent = `Welcome ${message.label}!`;
+				} else {
+					document.getElementById('message').textContent = 'Face not recognized.';
+				}
+			}
+		});
+	</script>
+</body>
+</html>
